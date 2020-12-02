@@ -5,7 +5,7 @@ import random
 # Constants
 Q = 3000 # Maximum truck load (kg)
 speed = 35 # Truck speed (km/h)
-type = {0:0, 1:5, 2:15, 3:25} # Service points' type based on unloading time (mins)
+type = {0:0, 1:5, 2:15, 3:25} # Service locations' type based on unloading time (mins)
 
 # Nodes' Creation
 class Node:
@@ -53,7 +53,6 @@ time_matrix = [[0.0 for j in range(0, len(all_nodes))] for k in range(0, len(all
 for i in range(0, len(all_nodes)):
     # Convert km to hours using speed
     time_matrix[i] = [x/speed for x in dist_matrix[i]]
-
     for j in range(0, len(all_nodes)):
         target = all_nodes[j]
         # Add unloading time of destination in hours
