@@ -46,3 +46,18 @@ for i in range(0, len(all_nodes)):
         dy_2 = (source.y - target.y) ** 2
         dist = round(math.sqrt(dx_2 + dy_2))
         dist_matrix[i][j] = dist
+
+# Time Matrix Creation
+time_matrix = [[0.0 for j in range(0, len(all_nodes))] for k in range(0, len(all_nodes))]
+
+for i in range(0, len(all_nodes)):
+    # Convert km to hours using speed
+    time_matrix[i] = [x/speed for x in dist_matrix[i]]
+
+    for j in range(0, len(all_nodes)):
+        target = all_nodes[j]
+        # Add unloading time of destination in hours
+        time_matrix[i][j] += type[target.type]/60
+
+# Initialize each truck's route
+routes = {truck:[] for truck in range(1, 26)}
