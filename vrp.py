@@ -19,6 +19,9 @@ class Node:
         self.x = xx
         self.y = yy
 
+    def __repr__(self):  
+        return "%s %s %s %s %s" % (self.id, self.type, self.demand, self.x, self.y)
+
 all_nodes = []
 service_locations = []
 depot = Node(0, 0, 0, 50, 50)
