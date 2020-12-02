@@ -1,16 +1,13 @@
 # Imports
-
 import math
 import random
 
 # Constants
-
-Q = 3000 # maximum truck load
-speed = 35 # truck speed (km/h)
-type = {1:5, 2:15, 3:25} # service points' type based on unloading time
+Q = 3000 # Maximum truck load (kg)
+speed = 35 # Truck speed (km/h)
+type = {1:5, 2:15, 3:25} # Service points' type based on unloading time
 
 # Nodes' Creation
-
 class Node:
     def __init__(self, id, tp, dem, xx, yy):
         self.id = id
@@ -32,21 +29,20 @@ for i in range(0, 200):
     id = i + 1
     tp = random.randint(1,3)
     dem = random.randint(1,5) * 100
-    xx = random.randint(0, 100)
-    yy = random.randint(0, 100)
+    xx = random.randint(0,100)
+    yy = random.randint(0,100)
     serv_node = Node(id, tp, dem, xx, yy)
     all_nodes.append(serv_node)
     service_locations.append(serv_node)
 
 # Distance Matrix Creation
-
 dist_matrix = [[0.0 for j in range(0, len(all_nodes))] for k in range(0, len(all_nodes))]
 
 for i in range(0, len(all_nodes)):
     for j in range(0, len(all_nodes)):
         source = all_nodes[i]
         target = all_nodes[j]
-        dx_2 = (source.x - target.x)**2
+        dx_2 = (source.x - target.x) ** 2
         dy_2 = (source.y - target.y) ** 2
         dist = round(math.sqrt(dx_2 + dy_2))
         dist_matrix[i][j] = dist
