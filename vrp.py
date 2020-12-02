@@ -5,7 +5,7 @@ import random
 # Constants
 Q = 3000 # Maximum truck load (kg)
 speed = 35 # Truck speed (km/h)
-type = {1:5, 2:15, 3:25} # Service points' type based on unloading time
+type = {0:0, 1:5, 2:15, 3:25} # Service points' type based on unloading time (mins)
 
 # Nodes' Creation
 class Node:
@@ -27,10 +27,10 @@ random.seed(1)
 
 for i in range(0, 200):
     id = i + 1
-    tp = random.randint(1,3)
-    dem = random.randint(1,5) * 100
-    xx = random.randint(0,100)
-    yy = random.randint(0,100)
+    tp = random.randint(1, 3)
+    dem = random.randint(1, 5) * 100
+    xx = random.randint(0, 100)
+    yy = random.randint(0, 100)
     serv_node = Node(id, tp, dem, xx, yy)
     all_nodes.append(serv_node)
     service_locations.append(serv_node)
