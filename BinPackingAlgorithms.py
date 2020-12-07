@@ -62,6 +62,7 @@ def BestFit(sol, all_nodes, Q):
             newTruck.kgOnTruck = newTruck.kgOnTruck + toBeAssigned.demand
             newTruck.emptySpace = newTruck.emptySpace - toBeAssigned.demand
 
+# Main Method
 def main():
     # Constants
     Q = 3000 # Maximum truck load - capacity (kg)
@@ -116,10 +117,8 @@ def main():
         for j in range(0, len(all_nodes)):
             # Convert km to hours using speed
             time_matrix[i][j] = dist_matrix[i][j]/speed
-
-            target = all_nodes[j]
-
             # Add unloading time of destination in hours
+            target = all_nodes[j]
             time_matrix[i][j] += type[target.type]/60
 
     # Calculate maximum travel time
@@ -127,10 +126,8 @@ def main():
 
     for truck in sol.trucks:
         travel_time = 0
-
         # Nodes of each truck
         truckNodes = truck.nodesOnRoute
-
         for i in range(0, len(truckNodes)-1):
             travel_time += time_matrix[truckNodes[i].id][truckNodes[i+1].id]
 
