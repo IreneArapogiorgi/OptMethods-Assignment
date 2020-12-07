@@ -1,115 +1,85 @@
 import random
 
-class Group:
-    def __init__(self, i):
-        self.ID = i
-        self.numberOfPersons = random.randint(10, 25)
+# Nodes' Creation
+class Node:
+    def __init__(self, id, tp, dem, xx, yy):
+        self.id = id
+        self.type = tp
+        self.demand = dem
+        self.x = xx
+        self.y = yy
 
 class Solution:
     def __init__(self):
-        self.buses = []
+        self.trucks = []
 
-class Bus:
+class Truck:
     def __init__(self):
-        self.capacity = 0
         self.emptySpace = 0
-        self.personsOnBoard = 0
-        self.groupsOnBoard = []
+        self.kgOnTruck = 0
+        self.nodesOnRoute = []
 
 def main():
-    groupsToBeTransported = []
+    all_nodes = []
+    service_locations = []
+    depot = Node(0, 0, 0, 50, 50)
+    all_nodes.append(depot)
     random.seed(1)
-    numberOfGroups = 600
 
-    for i in range (0, numberOfGroups, 1):
-        g = Group(i)
-        groupsToBeTransported.append(g)
+    for i in range(0, 200):
+        id = i + 1
+        tp = random.randint(1, 3)
+        dem = random.randint(1, 5) * 100
+        xx = random.randint(0, 100)
+        yy = random.randint(0, 100)
+        serv_node = Node(id, tp, dem, xx, yy)
+        all_nodes.append(serv_node)
+        service_locations.append(serv_node)
 
-    busCapacity = 40
+    Q = 3000 #truck capacity
     sol = Solution()
 
-    #sortGroups(groupsToBeTransported)
-    FirstFit(sol, groupsToBeTransported, busCapacity)
-    print(len(sol.buses))
-    sol.buses.clear()
+    sortNodes(all_nodes)
 
-    BestFit(sol, groupsToBeTransported, busCapacity)
-    print(len(sol.buses))
-    sol.buses.clear()
+    BestFit(sol, all_nodes, Q)
+    print(len(sol.trucks))
+    sol.trucks.clear()
 
-def sortGroups(listOFGroups: list):
-    listOFGroups.sort(key = lambda x: x.numberOfPersons, reverse=True)
+def sortNodes(listOFNodes: list):
+    listOFNodes.sort(key = lambda x: x.demand, reverse=True)
 
-def BestFit(sol, groupsToBeTransported, busCapacity):
+def BestFit(sol, all_nodes, Q):
 
-    totalGroups = len(groupsToBeTransported)
+    totalNodes = len(all_nodes)
 
-    for i in range(0, totalGroups):
+    for i in range(0, totalNodes):
 
-        toBeAssigned = groupsToBeTransported[i]
-        indexOfBestBus = -1
+        toBeAssigned = all_nodes[i]
+        indexOfBestTruck = -1
         minimumEmptySpace = 1000000
 
-        totalOpenBuses = len(sol.buses)
+        totalOpenTrucks = len(sol.trucks)
 
-        for b in range(0, totalOpenBuses):
-            trialBus = sol.buses[b]
-            if (trialBus.emptySpace >= toBeAssigned.numberOfPersons):
-                if (trialBus.emptySpace < minimumEmptySpace):
-                    minimumEmptySpace = trialBus.emptySpace
-                    indexOfBestBus = b
+        for b in range(0, totalOpenTrucks):
+            trialTruck = sol.trucks[b]
+            if (trialTruck.emptySpace >= toBeAssigned.demand):
+                if (trialTruck.emptySpace < minimumEmptySpace):
+                    minimumEmptySpace = trialTruck.emptySpace
+                    indexOfBestTruck = b
 
-        if (indexOfBestBus != -1):
-            busOfInsertion: Bus = sol.buses[indexOfBestBus]
-            busOfInsertion.groupsOnBoard.append(toBeAssigned)
-            busOfInsertion.personsOnBoard = busOfInsertion.personsOnBoard + toBeAssigned.numberOfPersons
-            busOfInsertion.emptySpace = busOfInsertion.emptySpace - toBeAssigned.numberOfPersons
+        if (indexOfBestTruck != -1):
+            truckOfInsertion: Truck = sol.trucks[indexOfBestTruck]
+            truckOfInsertion.nodesOnRoute.append(toBeAssigned)
+            truckOfInsertion.kgOnTruck = truckOfInsertion.kgOnTruck + toBeAssigned.demand
+            truckOfInsertion.emptySpace = truckOfInsertion.emptySpace - toBeAssigned.demand
         else:
-            newBus = Bus()
-            newBus.capacity = busCapacity
-            newBus.personsOnBoard = 0
-            newBus.emptySpace = busCapacity
+            newTruck = Truck()
+            newTruck.kgOnTruck = 0
+            newTruck.emptySpace = Q
 
-            sol.buses.append(newBus)
-            newBus.groupsOnBoard.append(toBeAssigned)
-            newBus.personsOnBoard = newBus.personsOnBoard + toBeAssigned.numberOfPersons
-            newBus.emptySpace = newBus.emptySpace - toBeAssigned.numberOfPersons
-
-
-
-def FirstFit(sol, groupsToBeTransported, busCapacity):
-    totalGroups = len(groupsToBeTransported)
-
-    for i in range(0, totalGroups):
-
-        toBeAssigned = groupsToBeTransported[i]
-        indexOfBusToBeInserted = -1
-        totalOpenBuses = len(sol.buses)
-
-        for b in range(0, totalOpenBuses):
-            trialBus:Bus = sol.buses[b]
-
-            if (trialBus.emptySpace >= toBeAssigned.numberOfPersons):
-                indexOfBusToBeInserted = b
-                break
-
-        if (indexOfBusToBeInserted != -1):
-            busOfInsertion: Bus = sol.buses[indexOfBusToBeInserted]
-            busOfInsertion.groupsOnBoard.append(toBeAssigned)
-            busOfInsertion.personsOnBoard = busOfInsertion.personsOnBoard + toBeAssigned.numberOfPersons
-            busOfInsertion.emptySpace = busOfInsertion.emptySpace - toBeAssigned.numberOfPersons
-        else:
-            newBus = Bus()
-            newBus.capacity = busCapacity
-            newBus.personsOnBoard = 0
-            newBus.emptySpace = busCapacity
-
-            sol.buses.append(newBus)
-            newBus.groupsOnBoard.append(toBeAssigned)
-            newBus.personsOnBoard = newBus.personsOnBoard + toBeAssigned.numberOfPersons
-            newBus.emptySpace = newBus.emptySpace - toBeAssigned.numberOfPersons
-
-
-
+            sol.trucks.append(newTruck)
+            newTruck.nodesOnRoute.append(toBeAssigned)
+            newTruck.kgOnTruck = newTruck.kgOnTruck + toBeAssigned.demand
+            newTruck.emptySpace = newTruck.emptySpace - toBeAssigned.demand
 
 main()
