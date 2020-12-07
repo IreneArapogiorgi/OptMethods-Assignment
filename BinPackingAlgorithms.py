@@ -1,5 +1,6 @@
-import random
+# Imports
 import math
+import random
 
 # Nodes' Creation
 class Node:
@@ -10,79 +11,23 @@ class Node:
         self.x = xx
         self.y = yy
 
+# Solution Creation
 class Solution:
     def __init__(self):
         self.trucks = []
 
+# Truck Creation
 class Truck:
     def __init__(self):
         self.emptySpace = 0
         self.kgOnTruck = 0
         self.nodesOnRoute = []
 
-def main():
-    all_nodes = []
-    service_locations = []
-    depot = Node(0, 0, 0, 50, 50)
-    all_nodes.append(depot)
-    random.seed(1)
-
-    for i in range(0, 200):
-        id = i + 1
-        tp = random.randint(1, 3)
-        dem = random.randint(1, 5) * 100
-        xx = random.randint(0, 100)
-        yy = random.randint(0, 100)
-        serv_node = Node(id, tp, dem, xx, yy)
-        all_nodes.append(serv_node)
-        service_locations.append(serv_node)
-
-    speed = 35
-    type = {0:0, 1:5, 2:15, 3:25} # Service locations' type based on unloading time (mins)
-    Q = 3000 #truck capacity
-    sol = Solution()
-
-    sortNodes(all_nodes)
-
-    BestFit(sol, all_nodes, Q)
-    print(len(sol.trucks))
-    # Distance Matrix Creation
-    dist_matrix = [[0.0 for j in range(0, len(all_nodes))] for k in range(0, len(all_nodes))]
-
-    for i in range(0, len(all_nodes)):
-        for j in range(0, len(all_nodes)):
-            source = all_nodes[i]
-            target = all_nodes[j]
-            dx_2 = (source.x - target.x) ** 2
-            dy_2 = (source.y - target.y) ** 2
-            dist = round(math.sqrt(dx_2 + dy_2))
-            dist_matrix[i][j] = dist
-
-    # Time Matrix Creation
-    time_matrix = [[0.0 for j in range(0, len(all_nodes))] for k in range(0, len(all_nodes))]
-
-    for i in range(0, len(all_nodes)):
-        for j in range(0, len(all_nodes)):
-            # Convert km to hours using speed
-            time_matrix[i][j] = dist_matrix[i][j]/speed
-            target = all_nodes[j]
-            # Add unloading time of destination in hours
-            time_matrix[i][j] += type[target.type]/60
-
-    sol.trucks.clear()
-
-    max_travel_time = 0
-    for truck in sol.trucks:
-        travel_time = 0
-        for i in range(0,len(truck)-1):
-            travel_time+=time_matrix[truck[i]][truck[i+1]]
-        if travel_time > max_travel_time :
-            max_travel_time = travel_time
-    print(max_travel_time)
-
+# Sort service locations based on demand
 def sortNodes(listOFNodes: list):
     listOFNodes.sort(key = lambda x: x.demand, reverse=True)
 
+# Best-Fit Algorithm
 def BestFit(sol, all_nodes, Q):
 
     totalNodes = len(all_nodes)
@@ -116,5 +61,83 @@ def BestFit(sol, all_nodes, Q):
             newTruck.nodesOnRoute.append(toBeAssigned)
             newTruck.kgOnTruck = newTruck.kgOnTruck + toBeAssigned.demand
             newTruck.emptySpace = newTruck.emptySpace - toBeAssigned.demand
+
+def main():
+    # Constants
+    Q = 3000 # Maximum truck load - capacity (kg)
+    speed = 35 # Truck speed (km/h)
+    type = {0:0, 1:5, 2:15, 3:25} # Service locations' type based on unloading time (mins)
+
+    # Initialize nodes - service locations
+    all_nodes = []
+    service_locations = []
+    depot = Node(0, 0, 0, 50, 50)
+    all_nodes.append(depot)
+    random.seed(1)
+
+    for i in range(0, 200):
+        id = i + 1
+        tp = random.randint(1, 3)
+        dem = random.randint(1, 5) * 100
+        xx = random.randint(0, 100)
+        yy = random.randint(0, 100)
+        serv_node = Node(id, tp, dem, xx, yy)
+        all_nodes.append(serv_node)
+        service_locations.append(serv_node)
+
+    # Create solution
+    sol = Solution()
+
+    # Sort nodes - service locations
+    sortNodes(all_nodes)
+
+    # Run best-fit algorithm
+    BestFit(sol, all_nodes, Q)
+
+    # Print number of trucks needed
+    print(len(sol.trucks))
+
+    # Create distance matrix
+    dist_matrix = [[0.0 for j in range(0, len(all_nodes))] for k in range(0, len(all_nodes))]
+
+    for i in range(0, len(all_nodes)):
+        for j in range(0, len(all_nodes)):
+            source = all_nodes[i]
+            target = all_nodes[j]
+            dx_2 = (source.x - target.x) ** 2
+            dy_2 = (source.y - target.y) ** 2
+            dist = round(math.sqrt(dx_2 + dy_2))
+            dist_matrix[i][j] = dist
+
+    # Create time matrix
+    time_matrix = [[0.0 for j in range(0, len(all_nodes))] for k in range(0, len(all_nodes))]
+
+    for i in range(0, len(all_nodes)):
+        for j in range(0, len(all_nodes)):
+            # Convert km to hours using speed
+            time_matrix[i][j] = dist_matrix[i][j]/speed
+
+            target = all_nodes[j]
+
+            # Add unloading time of destination in hours
+            time_matrix[i][j] += type[target.type]/60
+
+    # Calculate maximum travel time
+    max_travel_time = 0
+
+    for truck in sol.trucks:
+        travel_time = 0
+
+        # Nodes of each truck
+        truckNodes = truck.nodesOnRoute
+
+        for i in range(0, len(truckNodes)-1):
+            travel_time += time_matrix[truckNodes[i].id][truckNodes[i+1].id]
+
+        if travel_time > max_travel_time:
+            max_travel_time = travel_time
+    
+    # Print maximum travel time
+    print(max_travel_time)
 
 main()
