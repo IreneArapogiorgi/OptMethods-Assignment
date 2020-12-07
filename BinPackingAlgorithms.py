@@ -1,4 +1,5 @@
 import random
+import math
 
 # Nodes' Creation
 class Node:
@@ -36,6 +37,8 @@ def main():
         all_nodes.append(serv_node)
         service_locations.append(serv_node)
 
+    speed = 35
+    type = {0:0, 1:5, 2:15, 3:25} # Service locations' type based on unloading time (mins)
     Q = 3000 #truck capacity
     sol = Solution()
 
@@ -43,7 +46,39 @@ def main():
 
     BestFit(sol, all_nodes, Q)
     print(len(sol.trucks))
+    # Distance Matrix Creation
+    dist_matrix = [[0.0 for j in range(0, len(all_nodes))] for k in range(0, len(all_nodes))]
+
+    for i in range(0, len(all_nodes)):
+        for j in range(0, len(all_nodes)):
+            source = all_nodes[i]
+            target = all_nodes[j]
+            dx_2 = (source.x - target.x) ** 2
+            dy_2 = (source.y - target.y) ** 2
+            dist = round(math.sqrt(dx_2 + dy_2))
+            dist_matrix[i][j] = dist
+
+    # Time Matrix Creation
+    time_matrix = [[0.0 for j in range(0, len(all_nodes))] for k in range(0, len(all_nodes))]
+
+    for i in range(0, len(all_nodes)):
+        for j in range(0, len(all_nodes)):
+            # Convert km to hours using speed
+            time_matrix[i][j] = dist_matrix[i][j]/speed
+            target = all_nodes[j]
+            # Add unloading time of destination in hours
+            time_matrix[i][j] += type[target.type]/60
+
     sol.trucks.clear()
+
+    max_travel_time = 0
+    for truck in sol.trucks:
+        travel_time = 0
+        for i in range(0,len(truck)-1):
+            travel_time+=time_matrix[truck[i]][truck[i+1]]
+        if travel_time > max_travel_time :
+            max_travel_time = travel_time
+    print(max_travel_time)
 
 def sortNodes(listOFNodes: list):
     listOFNodes.sort(key = lambda x: x.demand, reverse=True)
