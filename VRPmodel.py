@@ -70,13 +70,17 @@ class Solution:
     def __init__(self):
         self.trucks = []
         self.max_travel_time = 0
+        self.last_truck_id = 0
 
     def CalculateMaxTravelTime(self,m):
         self.max_travel_time = 0
-        for truck in self.trucks:
+        self.last_truck_id = 0
+        for i in range(0,len(self.trucks)):
+            truck = self.trucks[i]
             truck.CalculateTravelTime(m)
             if truck.travel_time > self.max_travel_time:
                 self.max_travel_time = truck.travel_time
+                self.last_truck_id = i
 
     def AddTruck(self):
         Q = 3000 # Maximum truck load (kg)
@@ -102,3 +106,7 @@ class Truck:
         self.nodesOnRoute.append(toBeAssigned)
         self.kgOnTruck = self.kgOnTruck + toBeAssigned.demand
         self.emptySpace = self.emptySpace - toBeAssigned.demand
+
+    def ShowRoute(self):
+        for i in range (0, len(self.nodesOnRoute)):
+            print(self.nodesOnRoute[i].id, end = ' ')
