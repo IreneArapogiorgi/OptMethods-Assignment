@@ -89,6 +89,18 @@ class Solution:
         newTruck.emptySpace = Q
         self.trucks.append(newTruck)
 
+    def ReportSolution(self):
+        print("Number of trucks: ",len(self.trucks))
+        print("Max travel time: ",self.max_travel_time)
+        print("Longest route: ")
+        self.trucks[self.last_truck_id].ShowRoute()
+        print("\n")
+        print("Solution routes: ")
+        for truck in self.trucks:
+            truck.ShowRoute()
+            print("\n",truck.travel_time)
+            print(truck.kgOnTruck,"\n")
+
 class Truck:
     def __init__(self):
         self.emptySpace = 0

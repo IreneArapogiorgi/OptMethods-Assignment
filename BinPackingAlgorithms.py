@@ -4,11 +4,11 @@ import random
 import VRPmodel
 
 # Best-Fit Algorithm
-def BestFit(sol, all_nodes, Q):
+def BestFit(sol, all_nodes):
 
     totalNodes = len(all_nodes)
-
-    for i in range(0, totalNodes):
+    depot = all_nodes[0]
+    for i in range(1, totalNodes):
 
         toBeAssigned = all_nodes[i]
         indexOfBestTruck = -1
@@ -29,4 +29,5 @@ def BestFit(sol, all_nodes, Q):
         else:
             sol.AddTruck()
             truckOfInsertion=sol.trucks[len(sol.trucks)-1]
+            truckOfInsertion.AddNode(depot)
             truckOfInsertion.AddNode(toBeAssigned)
