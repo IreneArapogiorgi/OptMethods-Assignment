@@ -4,10 +4,11 @@ import random
 import VRPmodel as v
 import BinPackingAlgorithms as b
 import TSP as t
+import improvement as im
 
 # Constants
 Q = 3000 # Maximum truck load (kg)
-T = 26 # Maximum number of trucks
+T = 25 # Maximum number of trucks
 
 def main():
     m = v.Model()
@@ -27,4 +28,10 @@ def main():
     print("******TSP improvement******")
     sol.CalculateMaxTravelTime(m)
     sol.ReportSolution()
+    if len(sol.trucks)<25 :
+        im.improveFleetUtilization(sol,m)
+    print("******Improved fleet utilization******")
+    sol.CalculateMaxTravelTime(m)
+    sol.ReportSolution()
+
 main()

@@ -50,6 +50,7 @@ def MinimumInsertions(truck, timeMatrix):
     newTruck.nodesOnRoute.insert(1, insertedCustomer)
     newTruck.travel_time += minimumInsertionCost
     newTruck.kgOnTruck += insertedCustomer.demand
+    newTruck.emptySpace -= insertedCustomer.demand
     insertedCustomer.isRouted = True
 
     for i in range (2, len(allNodes)):
@@ -70,11 +71,15 @@ def MinimumInsertions(truck, timeMatrix):
                     indexOfTheNextCustomer = j
                     positionOfInsertion = k
                     minimumInsertionCost = trialCost
-
+            if timeMatrix[newTruck.nodesOnRoute[len(newTruck.nodesOnRoute)-1].id][candidate.id]< minimumInsertionCost:
+                indexOfTheNextCustomer = j
+                positionOfInsertion = len(newTruck.nodesOnRoute)
+                minimumInsertionCost = timeMatrix[newTruck.nodesOnRoute[len(newTruck.nodesOnRoute)-1].id][candidate.id]
         insertedCustomer = allNodes[indexOfTheNextCustomer]
         newTruck.nodesOnRoute.insert(positionOfInsertion, insertedCustomer)
         newTruck.travel_time += minimumInsertionCost
         newTruck.kgOnTruck += insertedCustomer.demand
+        newTruck.emptySpace -= insertedCustomer.demand
         insertedCustomer.isRouted = True
     return newTruck
     '''for i in range (0, len(truck.nodesOnRoute)):

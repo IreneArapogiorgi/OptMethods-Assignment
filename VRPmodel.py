@@ -83,10 +83,8 @@ class Solution:
                 self.last_truck_id = i
 
     def AddTruck(self):
-        Q = 3000 # Maximum truck load (kg)
         newTruck = Truck()
         newTruck.kgOnTruck = 0
-        newTruck.emptySpace = Q
         self.trucks.append(newTruck)
 
     def ReportSolution(self):
@@ -103,7 +101,7 @@ class Solution:
 
 class Truck:
     def __init__(self):
-        self.emptySpace = 0
+        self.emptySpace = 3000
         self.kgOnTruck = 0
         self.nodesOnRoute = []
         self.travel_time = 0
