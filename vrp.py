@@ -3,7 +3,7 @@ import math
 import random
 import VRPmodel as v
 import BinPackingAlgorithms as b
-#import TSP as t
+import TSP as t
 
 # Constants
 Q = 3000 # Maximum truck load (kg)
@@ -16,10 +16,15 @@ def main():
     m.createTimeMatrix()
     m.sortNodes()
     sol = v.Solution()
+
     b.BestFit(sol,m.allNodes)
     sol.CalculateMaxTravelTime(m)
     print("******Bin Packing******")
     sol.ReportSolution()
-    #for truck in sol.trucks:
-    #    t.MinimumInsertions(truck)
+
+    for i in range (0,len(sol.trucks)):
+        sol.trucks[i] = t.MinimumInsertions(sol.trucks[i],m.time_matrix)
+    print("******TSP improvement******")
+    sol.CalculateMaxTravelTime(m)
+    sol.ReportSolution()
 main()
