@@ -7,7 +7,6 @@ import TSP as t
 import improvement as im
 
 # Constants
-Q = 3000 # Maximum truck load (kg)
 T = 25 # Maximum number of trucks
 
 def main():
@@ -30,7 +29,7 @@ def main():
     sol.ReportSolution()
     
     print("******Improved Fleet Utilization******")
-    if len(sol.trucks) < 25 :
+    if len(sol.trucks) < T:
         im.improveFleetUtilization(sol, m)
     sol.CalculateMaxTravelTime(m)
     sol.ReportSolution()
