@@ -27,7 +27,7 @@ class Model:
         self.allNodes.append(depot)
         random.seed(1)
 
-        for i in range(0,200):
+        for i in range(0, 200):
             id = i + 1
             tp = random.randint(1, 3)
             dem = random.randint(1, 5) * 100
@@ -72,10 +72,10 @@ class Solution:
         self.max_travel_time = 0
         self.last_truck_id = 0
 
-    def CalculateMaxTravelTime(self,m):
+    def CalculateMaxTravelTime(self, m):
         self.max_travel_time = 0
         self.last_truck_id = 0
-        for i in range(0,len(self.trucks)):
+        for i in range(0, len(self.trucks)):
             truck = self.trucks[i]
             truck.CalculateTravelTime(m)
             if truck.travel_time > self.max_travel_time:
@@ -88,16 +88,16 @@ class Solution:
         self.trucks.append(newTruck)
 
     def ReportSolution(self):
-        print("Number of trucks: ",len(self.trucks))
-        print("Max travel time: ",self.max_travel_time)
+        print("Number of trucks: ", len(self.trucks))
+        print("Max travel time: ", self.max_travel_time)
         print("Longest route: ")
         self.trucks[self.last_truck_id].ShowRoute()
         print("\n")
         print("Solution routes: ")
         for truck in self.trucks:
             truck.ShowRoute()
-            print("\n",truck.travel_time)
-            print(truck.kgOnTruck,"\n")
+            print("\n", truck.travel_time)
+            print(truck.kgOnTruck, "\n")
 
 class Truck:
     def __init__(self):
@@ -106,13 +106,13 @@ class Truck:
         self.nodesOnRoute = []
         self.travel_time = 0
 
-    def CalculateTravelTime(self,m):
+    def CalculateTravelTime(self, m):
         self.travel_time = 0
         truckNodes = self.nodesOnRoute
         for i in range(0, len(truckNodes)-1):
             self.travel_time += m.time_matrix[truckNodes[i].id][truckNodes[i+1].id]
 
-    def AddNode(self,toBeAssigned):
+    def AddNode(self, toBeAssigned):
         self.nodesOnRoute.append(toBeAssigned)
         self.kgOnTruck = self.kgOnTruck + toBeAssigned.demand
         self.emptySpace = self.emptySpace - toBeAssigned.demand
