@@ -18,19 +18,20 @@ def main():
     m.sortNodes()
     sol = v.Solution()
 
-    b.BestFit(sol,m.allNodes)
-    sol.CalculateMaxTravelTime(m)
     print("******Bin Packing******")
+    b.BestFit(sol, m.allNodes)
+    sol.CalculateMaxTravelTime(m)
     sol.ReportSolution()
 
-    for i in range (0,len(sol.trucks)):
-        sol.trucks[i] = t.MinimumInsertions(sol.trucks[i],m.time_matrix)
-    print("******TSP improvement******")
+    print("******TSP Improvement******")
+    for i in range(0, len(sol.trucks)):
+        sol.trucks[i] = t.MinimumInsertions(sol.trucks[i], m.time_matrix)
     sol.CalculateMaxTravelTime(m)
     sol.ReportSolution()
-    if len(sol.trucks)<25 :
-        im.improveFleetUtilization(sol,m)
-    print("******Improved fleet utilization******")
+    
+    print("******Improved Fleet Utilization******")
+    if len(sol.trucks) < 25 :
+        im.improveFleetUtilization(sol, m)
     sol.CalculateMaxTravelTime(m)
     sol.ReportSolution()
 
