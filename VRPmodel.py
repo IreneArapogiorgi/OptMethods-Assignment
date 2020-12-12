@@ -61,11 +61,9 @@ class Model:
 
         for i in range(0, len(self.allNodes)):
             for j in range(0, len(self.allNodes)):
-                # Convert km to hours using speed
-                self.time_matrix[i][j] = self.dist_matrix[i][j]/speed
-                # Add unloading time of destination in hours
                 target = self.allNodes[j]
-                self.time_matrix[i][j] += type[target.type]/60
+                # Convert km to hours using speed & add unloading time of destination in hours
+                self.time_matrix[i][j] = self.dist_matrix[i][j]/speed + type[target.type]/60
 
 class Solution:
     def __init__(self):
