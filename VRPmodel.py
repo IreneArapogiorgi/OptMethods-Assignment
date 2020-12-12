@@ -15,8 +15,9 @@ class Node:
         return "%s %s %s %s %s" % (self.id, self.type, self.demand, self.x, self.y)
 
 class Model:
-    # instance variables
+    # Instance variables
     def __init__(self):
+        self.nodesNum = 200
         self.allNodes = []
         self.service_locations = []
         self.dist_matrix = []
@@ -27,7 +28,7 @@ class Model:
         self.allNodes.append(depot)
         random.seed(1)
 
-        for i in range(0, 200):
+        for i in range(0, self.nodesNum):
             id = i + 1
             tp = random.randint(1, 3)
             dem = random.randint(1, 5) * 100
