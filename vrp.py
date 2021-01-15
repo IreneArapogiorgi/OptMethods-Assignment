@@ -1,13 +1,6 @@
 # Imports
-import math
-import random
 import VRPmodel as v
-import BinPackingAlgorithms as b
-import TSP as t
-import improvement as im
-
-# Constants
-T = 25 # Maximum number of trucks
+import BinPackingAlgorithm as b
 
 def main():
     m = v.Model()
@@ -17,20 +10,9 @@ def main():
     m.sortNodes()
     sol = v.Solution()
 
-    print("******Bin Packing******")
-    b.BestFit(sol, m.allNodes)
-    sol.CalculateMaxTravelTime(m)
-    sol.ReportSolution()
-
-    print("******TSP Improvement******")
-    for i in range(0, len(sol.trucks)):
-        sol.trucks[i] = t.MinimumInsertions(sol.trucks[i], m.time_matrix)
-    sol.CalculateMaxTravelTime(m)
-    sol.ReportSolution()
-    
-    print("******Improved Fleet Utilization******")
-    if len(sol.trucks) < T:
-        im.improveFleetUtilization(sol, m)
+    print()
+    print("******Solution******")
+    b.BestFitTime(sol, m.allNodes, m.time_matrix)
     sol.CalculateMaxTravelTime(m)
     sol.ReportSolution()
 
