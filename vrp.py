@@ -3,7 +3,7 @@ import VRPmodel as v
 import BinPackingAlgorithm as b
 import TSP as t
 import improvement as im
-#from VND import *
+from VND import *
 
 # Constants
 T = 25 # Maximum number of trucks
@@ -33,10 +33,10 @@ def main():
     sol.CalculateMaxTravelTime(m)
     sol.ReportSolution()
 
-    #print("******VND******")
-    #solv = Solver(m)
-    #sol = solv.solve()
-    #sol.CalculateMaxTravelTime(m)
-    #sol.ReportSolution()
+    print("******VND******")
+    solv = Solver(m,sol)
+    sol = solv.solve()
+    sol.CalculateMaxTravelTime(m)
+    sol.ReportSolution()
 
 main()
