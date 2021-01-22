@@ -4,7 +4,7 @@ import BinPackingAlgorithm as b
 import TSP as t
 import improvement as im
 from VND import *
-from VND2 import *
+from Solver import *
 
 # Constants
 T = 25 # Maximum number of trucks

@@ -1,5 +1,6 @@
 from VRPmodel import *
 from SolutionDrawer import *
+import timeit
 
 class RelocationMove(object):
     def __init__(self):
@@ -29,7 +30,6 @@ class SwapMove(object):
         self.costChangeFirstRt = None
         self.costChangeSecondRt = None
         self.moveCost = None
-        self.costChange = None
     def Initialize(self):
         self.positionOfFirstRoute = None
         self.positionOfSecondRoute = None
@@ -38,7 +38,6 @@ class SwapMove(object):
         self.costChangeFirstRt = None
         self.costChangeSecondRt = None
         self.moveCost = 10 ** 9
-        self.costChange = None
 
 class TwoOptMove(object):
     def __init__(self):
@@ -54,7 +53,7 @@ class TwoOptMove(object):
         self.positionOfSecondNode = None
         self.moveCost = 10 ** 9
 
-class Solver:
+class Solver2:
     def __init__(self, m, sol):
         self.allNodes = m.allNodes
         self.service_locations = m.service_locations
@@ -83,6 +82,7 @@ class Solver:
         return self.sol
 
     def VND(self):
+        start_time = timeit.default_timer()
         self.zeroCostTowardsDepot()
         self.bestSolution = self.cloneSolution(self.sol)
         VNDIterator = 0
@@ -95,9 +95,8 @@ class Solver:
         k = 1
         neighborhoodTypeOrder = [self.FindBestSwapMove, self.FindBestTwoOptMove, self.FindBestRelocationMove]
 
-        while k <= kmax and VNDIterator <= 100:
+        while k <= kmax and (timeit.default_timer() - start_time) <= 270.0:
             self.InitializeOperators(rm, sm, top)
-
             moveTypeToApply = neighborhoodTypeOrder[k - 1]
             moveStructure = neighborhoodTypeDict[moveTypeToApply]
             bestNeighbor, moveCost = self.FindBestNeighbor(moveTypeToApply, moveStructure)
@@ -115,8 +114,10 @@ class Solver:
 
             self.searchTrajectory.append(self.sol.max_travel_time)
             print(self.sol.max_travel_time)
+            print(self.CalculateTotalCost(self.sol))
 
         SolDrawer.drawTrajectory(self.searchTrajectory)
+        print("--- %s seconds ---" % (timeit.default_timer() - start_time))
 
     def FindBestNeighbor(self, moveTypeToApply, moveStructure):
         bestNeighbor = None
@@ -159,139 +160,96 @@ class Solver:
         return cloned
 
     def FindBestRelocationMove(self, rm):
-        print('Relocation Move')
-        originRouteIndex = self.sol.last_truck_id
-        rt1:Truck = self.sol.trucks[originRouteIndex]
-        for targetRouteIndex in range (0, len(self.sol.trucks)):
-            rt2:Truck = self.sol.trucks[targetRouteIndex]
-            for originNodeIndex in range (1, len(rt1.nodesOnRoute) - 1):
-                for targetNodeIndex in range (0, len(rt2.nodesOnRoute) - 1):
+        for originRouteIndex in range(0, len(self.sol.trucks)):
+            rt1:Truck = self.sol.trucks[originRouteIndex]
+            for targetRouteIndex in range (0, len(self.sol.trucks)):
+                rt2:Truck = self.sol.trucks[targetRouteIndex]
+                for originNodeIndex in range (1, len(rt1.nodesOnRoute) - 1):
+                    for targetNodeIndex in range (0, len(rt2.nodesOnRoute) - 1):
 
-                    if originRouteIndex == targetRouteIndex and (targetNodeIndex == originNodeIndex or targetNodeIndex == originNodeIndex - 1):
-                        continue
-
-                    A = rt1.nodesOnRoute[originNodeIndex - 1]
-                    B = rt1.nodesOnRoute[originNodeIndex]
-                    C = rt1.nodesOnRoute[originNodeIndex + 1]
-
-                    F = rt2.nodesOnRoute[targetNodeIndex]
-                    G = rt2.nodesOnRoute[targetNodeIndex + 1]
-
-                    if rt1 != rt2:
-                        if rt2.kgOnTruck + B.demand > 3000:
+                        if originRouteIndex == targetRouteIndex and (targetNodeIndex == originNodeIndex or targetNodeIndex == originNodeIndex - 1):
                             continue
 
-                    costAdded = self.distanceMatrix[A.id][C.id] + self.distanceMatrix[F.id][B.id] + self.distanceMatrix[B.id][G.id]
-                    costRemoved = self.distanceMatrix[A.id][B.id] + self.distanceMatrix[B.id][C.id] + self.distanceMatrix[F.id][G.id]
+                        A = rt1.nodesOnRoute[originNodeIndex - 1]
+                        B = rt1.nodesOnRoute[originNodeIndex]
+                        C = rt1.nodesOnRoute[originNodeIndex + 1]
 
-                    originRtCostChange = self.distanceMatrix[A.id][C.id] - self.distanceMatrix[A.id][B.id] - self.distanceMatrix[B.id][C.id]
-                    targetRtCostChange = self.distanceMatrix[F.id][B.id] + self.distanceMatrix[B.id][G.id] - self.distanceMatrix[F.id][G.id]
+                        F = rt2.nodesOnRoute[targetNodeIndex]
+                        G = rt2.nodesOnRoute[targetNodeIndex + 1]
 
-                    max_id = -1
-                    max_time = -1
-                    for i in range (0,len(self.sol.trucks)):
-                        if i == originRouteIndex:
-                            truck_time = rt1.travel_time+originRtCostChange
-                        elif i == targetRouteIndex:
-                            truck_time = rt2.travel_time+targetRtCostChange
-                        else:
-                            truck_time = self.sol.trucks[i].travel_time
-                        if truck_time > max_time:
-                            max_time = truck_time
-                            max_id = id
+                        if rt1 != rt2:
+                            if rt2.kgOnTruck + B.demand > rt2.capacity:
+                                continue
 
-                    moveCost = max_time - self.sol.max_travel_time
+                        costAdded = self.distanceMatrix[A.id][C.id] + self.distanceMatrix[F.id][B.id] + self.distanceMatrix[B.id][G.id]
+                        costRemoved = self.distanceMatrix[A.id][B.id] + self.distanceMatrix[B.id][C.id] + self.distanceMatrix[F.id][G.id]
 
-                    if (moveCost < rm.moveCost) and moveCost<0.0 and abs(moveCost) > 0.0001:
-                        self.StoreBestRelocationMove(originRouteIndex, targetRouteIndex, originNodeIndex, targetNodeIndex, moveCost, originRtCostChange, targetRtCostChange, rm)
+                        originRtCostChange = self.distanceMatrix[A.id][C.id] - self.distanceMatrix[A.id][B.id] - self.distanceMatrix[B.id][C.id]
+                        targetRtCostChange = self.distanceMatrix[F.id][B.id] + self.distanceMatrix[B.id][G.id] - self.distanceMatrix[F.id][G.id]
+
+                        moveCost = costAdded - costRemoved
+
+                        if (moveCost < rm.moveCost) and abs(moveCost) > 0.0001:
+                            self.StoreBestRelocationMove(originRouteIndex, targetRouteIndex, originNodeIndex, targetNodeIndex, moveCost, originRtCostChange, targetRtCostChange, rm)
 
         return rm.originRoutePosition
 
     def FindBestSwapMove(self, sm):
-        print('Swap Move')
-        firstRouteIndex = self.sol.last_truck_id
-        rt1:Truck = self.sol.trucks[firstRouteIndex]
-        for secondRouteIndex in range (0, len(self.sol.trucks)):
-            rt2:Truck = self.sol.trucks[secondRouteIndex]
-            for firstNodeIndex in range (1, len(rt1.nodesOnRoute) - 1):
-                startOfSecondNodeIndex = 1
-                if rt1 == rt2:
-                    startOfSecondNodeIndex = firstNodeIndex + 1
-                for secondNodeIndex in range (startOfSecondNodeIndex, len(rt2.nodesOnRoute) - 1):
-
-                    a1 = rt1.nodesOnRoute[firstNodeIndex - 1]
-                    b1 = rt1.nodesOnRoute[firstNodeIndex]
-                    c1 = rt1.nodesOnRoute[firstNodeIndex + 1]
-
-                    a2 = rt2.nodesOnRoute[secondNodeIndex - 1]
-                    b2 = rt2.nodesOnRoute[secondNodeIndex]
-                    c2 = rt2.nodesOnRoute[secondNodeIndex + 1]
-
-                    moveCost = None
-                    costChange = None
-                    costChangeFirstRoute = None
-                    costChangeSecondRoute = None
-
+        for firstRouteIndex in range(0, len(self.sol.trucks)):
+            rt1:Truck = self.sol.trucks[firstRouteIndex]
+            for secondRouteIndex in range (firstRouteIndex, len(self.sol.trucks)):
+                rt2:Truck = self.sol.trucks[secondRouteIndex]
+                for firstNodeIndex in range (1, len(rt1.nodesOnRoute) - 1):
+                    startOfSecondNodeIndex = 1
                     if rt1 == rt2:
-                        if firstNodeIndex == secondNodeIndex - 1:
-                            costRemoved = self.distanceMatrix[a1.id][b1.id] + self.distanceMatrix[b1.id][b2.id] + self.distanceMatrix[b2.id][c2.id]
-                            costAdded = self.distanceMatrix[a1.id][b2.id] + self.distanceMatrix[b2.id][b1.id] + self.distanceMatrix[b1.id][c2.id]
-                            costChange = costAdded - costRemoved
+                        startOfSecondNodeIndex = firstNodeIndex + 1
+                    for secondNodeIndex in range (startOfSecondNodeIndex, len(rt2.nodesOnRoute) - 1):
+
+                        a1 = rt1.nodesOnRoute[firstNodeIndex - 1]
+                        b1 = rt1.nodesOnRoute[firstNodeIndex]
+                        c1 = rt1.nodesOnRoute[firstNodeIndex + 1]
+
+                        a2 = rt2.nodesOnRoute[secondNodeIndex - 1]
+                        b2 = rt2.nodesOnRoute[secondNodeIndex]
+                        c2 = rt2.nodesOnRoute[secondNodeIndex + 1]
+
+                        moveCost = None
+                        costChangeFirstRoute = None
+                        costChangeSecondRoute = None
+
+                        if rt1 == rt2:
+                            if firstNodeIndex == secondNodeIndex - 1:
+                                costRemoved = self.distanceMatrix[a1.id][b1.id] + self.distanceMatrix[b1.id][b2.id] + self.distanceMatrix[b2.id][c2.id]
+                                costAdded = self.distanceMatrix[a1.id][b2.id] + self.distanceMatrix[b2.id][b1.id] + self.distanceMatrix[b1.id][c2.id]
+                                moveCost = costAdded - costRemoved
+                            else:
+
+                                costRemoved1 = self.distanceMatrix[a1.id][b1.id] + self.distanceMatrix[b1.id][c1.id]
+                                costAdded1 = self.distanceMatrix[a1.id][b2.id] + self.distanceMatrix[b2.id][c1.id]
+                                costRemoved2 = self.distanceMatrix[a2.id][b2.id] + self.distanceMatrix[b2.id][c2.id]
+                                costAdded2 = self.distanceMatrix[a2.id][b1.id] + self.distanceMatrix[b1.id][c2.id]
+                                moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
                         else:
+                            if rt1.kgOnTruck - b1.demand + b2.demand > self.capacity:
+                                continue
+                            if rt2.kgOnTruck - b2.demand + b1.demand > self.capacity:
+                                continue
 
                             costRemoved1 = self.distanceMatrix[a1.id][b1.id] + self.distanceMatrix[b1.id][c1.id]
                             costAdded1 = self.distanceMatrix[a1.id][b2.id] + self.distanceMatrix[b2.id][c1.id]
                             costRemoved2 = self.distanceMatrix[a2.id][b2.id] + self.distanceMatrix[b2.id][c2.id]
                             costAdded2 = self.distanceMatrix[a2.id][b1.id] + self.distanceMatrix[b1.id][c2.id]
-                            costChange = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
-                        max_id = -1
-                        max_time = -1
-                        for i in range (0,len(self.sol.trucks)):
-                            if i == firstRouteIndex:
-                                truck_time = rt1.travel_time+costChange
-                            else:
-                                truck_time = self.sol.trucks[i].travel_time
-                            if truck_time > max_time:
-                                max_time = truck_time
-                                max_id = id
 
-                    else:
-                        if rt1.kgOnTruck - b1.demand + b2.demand > self.capacity:
-                            continue
-                        if rt2.kgOnTruck - b2.demand + b1.demand > self.capacity:
-                            continue
+                            costChangeFirstRoute = costAdded1 - costRemoved1
+                            costChangeSecondRoute = costAdded2 - costRemoved2
 
-                        costRemoved1 = self.distanceMatrix[a1.id][b1.id] + self.distanceMatrix[b1.id][c1.id]
-                        costAdded1 = self.distanceMatrix[a1.id][b2.id] + self.distanceMatrix[b2.id][c1.id]
-                        costRemoved2 = self.distanceMatrix[a2.id][b2.id] + self.distanceMatrix[b2.id][c2.id]
-                        costAdded2 = self.distanceMatrix[a2.id][b1.id] + self.distanceMatrix[b1.id][c2.id]
-
-                        costChangeFirstRoute = costAdded1 - costRemoved1
-                        costChangeSecondRoute = costAdded2 - costRemoved2
-                        costChange = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
-                    
-                        max_id = -1
-                        max_time = -1
-                        for i in range (0,len(self.sol.trucks)):
-                            if i == firstRouteIndex:
-                                truck_time = rt1.travel_time+costChangeFirstRoute
-                            elif i == secondRouteIndex:
-                                truck_time = rt2.travel_time+costChangeSecondRoute
-                            else:
-                                truck_time = self.sol.trucks[i].travel_time
-                            if truck_time > max_time:
-                                max_time = truck_time
-                                max_id = id
-
-                    moveCost = max_time - self.sol.max_travel_time
-
-                    if moveCost < sm.moveCost and moveCost<0.0 and abs(moveCost) > 0.0001:
-                        self.StoreBestSwapMove(firstRouteIndex, secondRouteIndex, firstNodeIndex, secondNodeIndex, moveCost, costChangeFirstRoute, costChangeSecondRoute, sm,costChange)
+                            moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
+                        if moveCost < sm.moveCost and abs(moveCost) > 0.0001:
+                            self.StoreBestSwapMove(firstRouteIndex, secondRouteIndex, firstNodeIndex, secondNodeIndex, moveCost, costChangeFirstRoute, costChangeSecondRoute, sm)
 
     def ApplyRelocationMove(self, rm: RelocationMove):
 
-        self.sol.CalculateMaxTravelTime(self.model)
-        oldCost = self.sol.max_travel_time
+        oldCost = self.CalculateTotalCost(self.sol)
 
         originRt = self.sol.trucks[rm.originRoutePosition]
         targetRt = self.sol.trucks[rm.targetRoutePosition]
@@ -305,9 +263,7 @@ class Solver:
             else:
                 targetRt.nodesOnRoute.insert(rm.targetNodePosition + 1, B)
 
-            originRt.travel_time += rm.costChangeOriginRt
-            originRt.travel_time += rm.costChangeTargetRt
-
+            originRt.travel_time += rm.moveCost
         else:
             del originRt.nodesOnRoute[rm.originNodePosition]
             targetRt.nodesOnRoute.insert(rm.targetNodePosition + 1, B)
@@ -317,16 +273,24 @@ class Solver:
             targetRt.kgOnTruck += B.demand
 
         self.sol.CalculateMaxTravelTime(self.model)
-        newCost = self.sol.max_travel_time
 
+        newCost = self.CalculateTotalCost(self.sol)
         #debuggingOnly
         if abs((newCost - oldCost) - rm.moveCost) > 0.0001:
-            print('Cost Issue RM')
+            print('Cost Issue')
 
+    def CalculateTotalCost(self, sol):
+        c = 0
+        for i in range (0, len(sol.trucks)):
+            rt = sol.trucks[i]
+            for j in range (0, len(rt.nodesOnRoute) - 1):
+                a = rt.nodesOnRoute[j]
+                b = rt.nodesOnRoute[j + 1]
+                c += self.distanceMatrix[a.id][b.id]
+        return c
 
     def ApplySwapMove(self, sm):
-       self.sol.CalculateMaxTravelTime(self.model)
-       oldCost = self.sol.max_travel_time
+       oldCost = self.CalculateTotalCost(self.sol)
        rt1 = self.sol.trucks[sm.positionOfFirstRoute]
        rt2 = self.sol.trucks[sm.positionOfSecondRoute]
        b1 = rt1.nodesOnRoute[sm.positionOfFirstNode]
@@ -335,7 +299,7 @@ class Solver:
        rt2.nodesOnRoute[sm.positionOfSecondNode] = b1
 
        if (rt1 == rt2):
-           rt1.travel_time += sm.costChange
+           rt1.travel_time += sm.moveCost
        else:
            rt1.travel_time += sm.costChangeFirstRt
            rt2.travel_time += sm.costChangeSecondRt
@@ -343,10 +307,11 @@ class Solver:
            rt2.kgOnTruck = rt2.kgOnTruck + b1.demand - b2.demand
 
        self.sol.CalculateMaxTravelTime(self.model)
-       newCost = self.sol.max_travel_time
+
+       newCost = self.CalculateTotalCost(self.sol)
        # debuggingOnly
        if abs((newCost - oldCost) - sm.moveCost) > 0.0001:
-           print('Cost Issue SM')
+           print('Cost Issue')
 
     def ReportSolution(self, sol):
         for i in range(0, len(sol.trucks)):
@@ -365,7 +330,7 @@ class Solver:
         rm.costChangeTargetRt = targetRtCostChange
         rm.moveCost = moveCost
 
-    def StoreBestSwapMove(self, firstRouteIndex, secondRouteIndex, firstNodeIndex, secondNodeIndex, moveCost, costChangeFirstRoute, costChangeSecondRoute, sm, costChange):
+    def StoreBestSwapMove(self, firstRouteIndex, secondRouteIndex, firstNodeIndex, secondNodeIndex, moveCost, costChangeFirstRoute, costChangeSecondRoute, sm):
         sm.positionOfFirstRoute = firstRouteIndex
         sm.positionOfSecondRoute = secondRouteIndex
         sm.positionOfFirstNode = firstNodeIndex
@@ -373,7 +338,6 @@ class Solver:
         sm.costChangeFirstRt = costChangeFirstRoute
         sm.costChangeSecondRt = costChangeSecondRoute
         sm.moveCost = moveCost
-        sm.costChange = costChange
 
     def InitializeOperators(self, rm, sm, top):
         rm.Initialize()
@@ -381,74 +345,42 @@ class Solver:
         top.Initialize()
 
     def FindBestTwoOptMove(self, top):
-        print('Two Opt Move')
-        rtInd1 = self.sol.last_truck_id
-        rt1:Truck = self.sol.trucks[rtInd1]
-        for rtInd2 in range(0, len(self.sol.trucks)):
-            rt2:Truck = self.sol.trucks[rtInd2]            
-            load1 = 0
-            load2 = 0
-            for nodeInd1 in range(0, len(rt1.nodesOnRoute) - 1):
-                start2 = 0
-                if (rt1 == rt2):
-                    start2 = nodeInd1 + 2
-                A = rt1.nodesOnRoute[nodeInd1]
-                B = rt1.nodesOnRoute[nodeInd1 + 1]
-                load1 += self.distanceMatrix[A.id][B.id]
-                for nodeInd2 in range(start2, len(rt2.nodesOnRoute) - 1):
-                    moveCost = 10 ** 9
+        for rtInd1 in range(0, len(self.sol.trucks)):
+            rt1:Truck = self.sol.trucks[rtInd1]
+            for rtInd2 in range(rtInd1, len(self.sol.trucks)):
+                rt2:Truck = self.sol.trucks[rtInd2]
+                for nodeInd1 in range(0, len(rt1.nodesOnRoute) - 1):
+                    start2 = 0
+                    if (rt1 == rt2):
+                        start2 = nodeInd1 + 2
 
-                    K = rt2.nodesOnRoute[nodeInd2]
-                    L = rt2.nodesOnRoute[nodeInd2 + 1]
-                    load2 += self.distanceMatrix[K.id][L.id]
+                    for nodeInd2 in range(start2, len(rt2.nodesOnRoute) - 1):
+                        moveCost = 10 ** 9
 
-                    if rt1 == rt2:
-                        if nodeInd1 == 0 and nodeInd2 == len(rt1.nodesOnRoute) - 2:
-                            continue
-                        costAdded = self.distanceMatrix[A.id][K.id] + self.distanceMatrix[B.id][L.id]
-                        costRemoved = self.distanceMatrix[A.id][B.id] + self.distanceMatrix[K.id][L.id]
-                        moveCost = costAdded - costRemoved
-                        max_id = -1
-                        max_time = -1
-                        for i in range (0,len(self.sol.trucks)):
-                            if i == rtInd1:
-                                truck_time = rt1.travel_time + moveCost
-                            else:
-                                truck_time = self.sol.trucks[i].travel_time
-                            if truck_time > max_time:
-                                max_time = truck_time
-                                max_id = id
-                    else:
-                        if nodeInd1 == 0 and nodeInd2 == 0:
-                            continue
-                        if nodeInd1 == len(rt1.nodesOnRoute) - 2 and  nodeInd2 == len(rt2.nodesOnRoute) - 2:
-                            continue
-                        if self.CapacityIsViolated(rt1, nodeInd1, rt2, nodeInd2):
-                            continue
+                        A = rt1.nodesOnRoute[nodeInd1]
+                        B = rt1.nodesOnRoute[nodeInd1 + 1]
+                        K = rt2.nodesOnRoute[nodeInd2]
+                        L = rt2.nodesOnRoute[nodeInd2 + 1]
 
-                        costAdded = self.distanceMatrix[A.id][L.id] + self.distanceMatrix[K.id][B.id]
-                        costRemoved = self.distanceMatrix[A.id][B.id] + self.distanceMatrix[K.id][L.id]
-                        moveCost = costAdded - costRemoved
+                        if rt1 == rt2:
+                            if nodeInd1 == 0 and nodeInd2 == len(rt1.nodesOnRoute) - 2:
+                                continue
+                            costAdded = self.distanceMatrix[A.id][K.id] + self.distanceMatrix[B.id][L.id]
+                            costRemoved = self.distanceMatrix[A.id][B.id] + self.distanceMatrix[K.id][L.id]
+                            moveCost = costAdded - costRemoved
+                        else:
+                            if nodeInd1 == 0 and nodeInd2 == 0:
+                                continue
+                            if nodeInd1 == len(rt1.nodesOnRoute) - 2 and  nodeInd2 == len(rt2.nodesOnRoute) - 2:
+                                continue
 
-                        tt1 = load1 + (rt1.travel_time - load2)
-                        tt2 = load2 + (rt2.travel_time - load1)
-                        max_id = -1
-                        max_time = -1
-                        for i in range (0,len(self.sol.trucks)):
-                            if i == rtInd1:
-                                truck_time = tt1
-                            elif i == rtInd2:
-                                truck_time = tt2
-                            else:
-                                truck_time = self.sol.trucks[i].travel_time
-                            if truck_time > max_time:
-                                max_time = truck_time
-                                max_id = id
-
-                    moveCost = max_time - self.sol.max_travel_time
-
-                    if moveCost < top.moveCost and abs(moveCost) > 0.0001:
-                        self.StoreBestTwoOptMove(rtInd1, rtInd2, nodeInd1, nodeInd2, moveCost, top)
+                            if self.CapacityIsViolated(rt1, nodeInd1, rt2, nodeInd2):
+                                continue
+                            costAdded = self.distanceMatrix[A.id][L.id] + self.distanceMatrix[B.id][K.id]
+                            costRemoved = self.distanceMatrix[A.id][B.id] + self.distanceMatrix[K.id][L.id]
+                            moveCost = costAdded - costRemoved
+                        if moveCost < top.moveCost and abs(moveCost) > 0.0001:
+                            self.StoreBestTwoOptMove(rtInd1, rtInd2, nodeInd1, nodeInd2, moveCost, top)
 
     def CapacityIsViolated(self, rt1, nodeInd1, rt2, nodeInd2):
 
