@@ -1,5 +1,6 @@
 from VRPmodel import *
 from SolutionDrawer import *
+import timeit
 
 class RelocationMove(object):
     def __init__(self):
@@ -76,13 +77,12 @@ class Solver:
         for j in range (0,len(self.sol.trucks)):
             del self.sol.trucks[j].nodesOnRoute[-1]
 
-    def solve(self):
-        self.VND()
+    def solve(self,start):
+        self.VND(start)
         self.removeDepotReturn()
-        self.ReportSolution(self.sol)
         return self.sol
 
-    def VND(self):
+    def VND(self,start):
         self.zeroCostTowardsDepot()
         self.bestSolution = self.cloneSolution(self.sol)
         VNDIterator = 0
@@ -95,7 +95,7 @@ class Solver:
         k = 1
         neighborhoodTypeOrder = [self.FindBestRelocationMove, self.FindBestSwapMove, self.FindBestTwoOptMove]
 
-        while k <= kmax and VNDIterator <= 100:
+        while k <= kmax and (timeit.default_timer() - start) <= 300:
             self.InitializeOperators(rm, sm, top)
 
             moveTypeToApply = neighborhoodTypeOrder[k - 1]
@@ -114,7 +114,6 @@ class Solver:
                 k = k + 1
 
             self.searchTrajectory.append(self.sol.max_travel_time)
-            print(self.sol.max_travel_time)
 
         SolDrawer.drawTrajectory(self.searchTrajectory)
 
@@ -159,7 +158,6 @@ class Solver:
         return cloned
 
     def FindBestRelocationMove(self, rm):
-        print('Relocation Move')
         originRouteIndex = self.sol.last_truck_id
         rt1:Truck = self.sol.trucks[originRouteIndex]
         for targetRouteIndex in range (0, len(self.sol.trucks)):
@@ -190,7 +188,9 @@ class Solver:
                     max_id = -1
                     max_time = -1
                     for i in range (0,len(self.sol.trucks)):
-                        if i == originRouteIndex:
+                        if i == originRouteIndex and  i == targetRouteIndex:
+                            truck_time = rt1.travel_time+originRtCostChange+targetRtCostChange
+                        elif i == originRouteIndex:
                             truck_time = rt1.travel_time+originRtCostChange
                         elif i == targetRouteIndex:
                             truck_time = rt2.travel_time+targetRtCostChange
@@ -199,7 +199,7 @@ class Solver:
                         if truck_time > max_time:
                             max_time = truck_time
                             max_id = id
-
+                    
                     moveCost = max_time - self.sol.max_travel_time
 
                     if (moveCost < rm.moveCost) and moveCost<0.0 and abs(moveCost) > 0.0001:
@@ -208,7 +208,6 @@ class Solver:
         return rm.originRoutePosition
 
     def FindBestSwapMove(self, sm):
-        print('Swap Move')
         firstRouteIndex = self.sol.last_truck_id
         rt1:Truck = self.sol.trucks[firstRouteIndex]
         for secondRouteIndex in range (0, len(self.sol.trucks)):
@@ -318,7 +317,7 @@ class Solver:
 
         self.sol.CalculateMaxTravelTime(self.model)
         newCost = self.sol.max_travel_time
-
+        
         #debuggingOnly
         if abs((newCost - oldCost) - rm.moveCost) > 0.0001:
             print('Cost Issue RM')
@@ -381,7 +380,6 @@ class Solver:
         top.Initialize()
 
     def FindBestTwoOptMove(self, top):
-        print('Two Opt Move')
         rtInd1 = self.sol.last_truck_id
         rt1:Truck = self.sol.trucks[rtInd1]
         for rtInd2 in range(0, len(self.sol.trucks)):

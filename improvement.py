@@ -60,6 +60,5 @@ def improveFleetUtilization(sol,mod):
         ltruck.kgOnTruck -= max_node.demand
         ltruck.emptySpace += max_node.demand
         sol.CalculateMaxTravelTime(mod)
-        print(sol.max_travel_time)
-    
+        
     #recalculate longest route

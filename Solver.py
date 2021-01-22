@@ -75,14 +75,12 @@ class Solver2:
         for j in range (0,len(self.sol.trucks)):
             del self.sol.trucks[j].nodesOnRoute[-1]
 
-    def solve(self):
-        self.VND()
+    def solve(self,start):
+        self.VND(start)
         self.removeDepotReturn()
-        self.ReportSolution(self.sol)
         return self.sol
 
-    def VND(self):
-        start_time = timeit.default_timer()
+    def VND(self,start):
         self.zeroCostTowardsDepot()
         self.bestSolution = self.cloneSolution(self.sol)
         VNDIterator = 0
@@ -92,10 +90,13 @@ class Solver2:
         top = TwoOptMove()
         neighborhoodTypeDict = {self.FindBestRelocationMove: rm, self.FindBestSwapMove: sm, self.FindBestTwoOptMove: top}
 
+        tabu = False
+        tabusize = 5
+        tabulist = []
         k = 1
         neighborhoodTypeOrder = [self.FindBestSwapMove, self.FindBestTwoOptMove,self.FindBestRelocationMove ]
 
-        while k <= kmax and (timeit.default_timer() - start_time) <= 270.0:
+        while k <= kmax and (timeit.default_timer() - start) <= 300 and not tabu:
             self.InitializeOperators(rm, sm, top)
             moveTypeToApply = neighborhoodTypeOrder[k - 1]
             moveStructure = neighborhoodTypeDict[moveTypeToApply]
@@ -107,17 +108,22 @@ class Solver2:
 
                 if (self.sol.max_travel_time < self.bestSolution.max_travel_time):
                     self.bestSolution = self.cloneSolution(self.sol)
+                
+                totalC = self.CalculateTotalCost(self.sol)
+                if totalC in tabulist:
+                    tabu = True
+
+                tabulist.insert(0,totalC)
+                if len(tabulist)>5:
+                    tabulist.pop()
 
                 VNDIterator = VNDIterator + 1
             else:
                 k = k + 1
 
             self.searchTrajectory.append(self.sol.max_travel_time)
-            print(self.sol.max_travel_time)
-            print(self.CalculateTotalCost(self.sol))
 
         SolDrawer.drawTrajectory(self.searchTrajectory)
-        print("--- %s seconds ---" % (timeit.default_timer() - start_time))
 
     def FindBestNeighbor(self, moveTypeToApply, moveStructure):
         bestNeighbor = None
