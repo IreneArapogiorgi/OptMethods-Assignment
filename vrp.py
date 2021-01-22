@@ -4,6 +4,7 @@ import BinPackingAlgorithm as b
 import TSP as t
 import improvement as im
 from VND import *
+from VND2 import *
 
 # Constants
 T = 25 # Maximum number of trucks
@@ -30,6 +31,12 @@ def main():
     
     print("******Improved Fleet Utilization******")
     im.improveFleetUtilization(sol, m)
+    sol.CalculateMaxTravelTime(m)
+    sol.ReportSolution()
+
+    print("******VND******")
+    solv = Solver2(m,sol)
+    sol = solv.solve()
     sol.CalculateMaxTravelTime(m)
     sol.ReportSolution()
 
