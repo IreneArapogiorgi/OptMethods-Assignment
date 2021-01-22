@@ -1,37 +1,10 @@
 import VRPmodel as v
 
 def SetRoutedFlagToFalseForAllCustomers(customers):
+    customers[0].isRouted = False
     for i in range (1, len(customers)):
         customers[i].isRouted = False
 
-"""
-def ApplyNearestNeighborMethod(depot, customers, sol, distanceMatrix):
-    sol.sequenceOfNodes.append(depot)
-    for i in range (0, len(customers)):
-        indexOfTheNextCustomer = -1
-        minimumInsertionCost = 1000000
-        lastIndexInSolution = len(sol.sequenceOfNodes) - 1
-        lastNodeInTheCurrentSequence = sol.sequenceOfNodes[lastIndexInSolution]
-
-        for j in range (0, len(customers)):
-            candidate = customers[j]
-            if candidate.isRouted == True:
-                continue
-            trialCost = distanceMatrix[lastNodeInTheCurrentSequence.ID][candidate.ID]
-            if (trialCost < minimumInsertionCost):
-                indexOfTheNextCustomer = j
-                minimumInsertionCost = trialCost
-
-        insertedCustomer = customers[indexOfTheNextCustomer]
-        sol.sequenceOfNodes.append(insertedCustomer)
-        sol.cost += distanceMatrix[lastNodeInTheCurrentSequence.ID][insertedCustomer.ID]
-        insertedCustomer.isRouted = True
-
-    lastIndexInSolution = len(sol.sequenceOfNodes) - 1
-    lastNodeInTheCurrentSequence = sol.sequenceOfNodes[lastIndexInSolution]
-    sol.sequenceOfNodes.append(depot)
-    sol.cost += distanceMatrix[lastNodeInTheCurrentSequence.ID][depot.ID]
-"""
 def MinimumInsertions(truck, timeMatrix):
     allNodes = truck.nodesOnRoute
     SetRoutedFlagToFalseForAllCustomers(allNodes)
@@ -82,45 +55,3 @@ def MinimumInsertions(truck, timeMatrix):
         newTruck.emptySpace -= insertedCustomer.demand
         insertedCustomer.isRouted = True
     return newTruck
-    '''for i in range (0, len(truck.nodesOnRoute)):
-            print(truck.nodesOnRoute[i].id, end = ' ')
-    print("\n",truck.travel_time,"\n")
-    '''
-
-"""
-def CheckSolution(sol, distanceMatrix):
-    cst = 0
-    for i in range(len(sol.sequenceOfNodes) - 1):
-        a = sol.sequenceOfNodes[i]
-        b = sol.sequenceOfNodes[i+1]
-        cst += distanceMatrix[a.ID][b.ID]
-    if (abs(cst - sol.cost) > 0.00001):
-        print('Error')
-
-
-def solve(m):
-
-    allNodes = m.allNodes
-    customers = m.customers
-    depot = allNodes[0]
-    distanceMatrix = m.matrix
-
-    sol1 = Solution()
-    #sol2 = Solution()
-
-    SetRoutedFlagToFalseForAllCustomers(customers)
-    #ApplyNearestNeighborMethod(depot, customers, sol1, distanceMatrix)
-    MinimumInsertions(depot, customers, sol1, distanceMatrix)
-    CheckSolution(sol1, distanceMatrix)
-    #CheckSolution(sol2, distanceMatrix)
-    ReportSolution(sol1)
-    #ReportSolution(sol2)    
-
-#m = Model()
-#m.BuildModel()
-#solve(m)
-"""
-
-
-
-

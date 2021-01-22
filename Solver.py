@@ -93,7 +93,7 @@ class Solver2:
         neighborhoodTypeDict = {self.FindBestRelocationMove: rm, self.FindBestSwapMove: sm, self.FindBestTwoOptMove: top}
 
         k = 1
-        neighborhoodTypeOrder = [self.FindBestSwapMove, self.FindBestTwoOptMove, self.FindBestRelocationMove]
+        neighborhoodTypeOrder = [self.FindBestSwapMove, self.FindBestTwoOptMove,self.FindBestRelocationMove ]
 
         while k <= kmax and (timeit.default_timer() - start_time) <= 270.0:
             self.InitializeOperators(rm, sm, top)
@@ -178,7 +178,7 @@ class Solver2:
                         G = rt2.nodesOnRoute[targetNodeIndex + 1]
 
                         if rt1 != rt2:
-                            if rt2.kgOnTruck + B.demand > rt2.capacity:
+                            if rt2.kgOnTruck + B.demand > 3000:
                                 continue
 
                         costAdded = self.distanceMatrix[A.id][C.id] + self.distanceMatrix[F.id][B.id] + self.distanceMatrix[B.id][G.id]

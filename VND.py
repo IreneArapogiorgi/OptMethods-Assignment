@@ -93,7 +93,7 @@ class Solver:
         neighborhoodTypeDict = {self.FindBestRelocationMove: rm, self.FindBestSwapMove: sm, self.FindBestTwoOptMove: top}
 
         k = 1
-        neighborhoodTypeOrder = [self.FindBestSwapMove, self.FindBestTwoOptMove, self.FindBestRelocationMove]
+        neighborhoodTypeOrder = [self.FindBestRelocationMove, self.FindBestSwapMove, self.FindBestTwoOptMove]
 
         while k <= kmax and VNDIterator <= 100:
             self.InitializeOperators(rm, sm, top)

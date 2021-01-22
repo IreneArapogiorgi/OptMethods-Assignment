@@ -25,6 +25,8 @@ def main():
 
     print("******TSP Improvement******")
     for i in range(0, len(sol.trucks)):
+        if len(sol.trucks[i].nodesOnRoute)< 2:
+            continue
         sol.trucks[i] = t.MinimumInsertions(sol.trucks[i], m.time_matrix)
     sol.CalculateMaxTravelTime(m)
     sol.ReportSolution()
