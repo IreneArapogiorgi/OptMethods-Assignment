@@ -63,7 +63,7 @@ def main():
     sol.CalculateMaxTravelTime(m)
     #sol.ReportSolution()
 
-    bestSol = sol
+    bestSol = cloneSolution(sol)
 
     while timeit.default_timer() - start_time <= 300.0:
 
@@ -87,7 +87,7 @@ def main():
             
     #print("******Best Solution******")
     bestSol.ReportSolution()
-    extractSolution(sol)
+    extractSolution(bestSol)
 
     print(timeit.default_timer() - start_time)
 
